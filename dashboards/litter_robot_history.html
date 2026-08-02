@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Litter-Robot History</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fa; --bg2:#eef1f6; --panel:#ffffff; --panel2:#f1f4f9; --line:#e2e7ef;
+  --txt:#1b2330; --muted:#697283; --shadow:0 1px 3px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.05);
+  --accent:#10b981; --accent2:#3b82f6;
+  --lr1:#5b7fb9; --lr2:#10b981;
+  --amber:#d99a2f; --red:#dc2626; --teal:#0ea5a3;
+}
+[data-theme="dark"]{
+  --bg:#0e1014; --bg2:#15181f; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+  --txt:#e8ebf0; --muted:#9aa3b2; --shadow:none;
+  --accent:#6ee7b7; --accent2:#60a5fa;
+  --lr1:#7da3df; --lr2:#34d399;
+  --amber:#fbbf24; --red:#f87171; --teal:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Tahoma,Verdana,Geneva,sans-serif;line-height:1.45;padding:26px 20px 56px;transition:background .25s,color .25s}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* global nav */
+.gnav{display:flex;gap:6px;align-items:center;margin-bottom:18px;flex-wrap:wrap;font-size:13px}
+.gnav .brand{font-weight:800;letter-spacing:-.2px;margin-right:8px;display:flex;align-items:center;gap:6px}
+.gnav a{text-decoration:none;color:var(--muted);padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);transition:.15s;white-space:nowrap}
+.gnav a:hover{color:var(--txt);border-color:var(--muted)}
+.gnav a.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+[data-theme="dark"] .gnav a.active{background:var(--accent);color:#06210f;border-color:var(--accent)}
+
+/* header */
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+h1{font-size:28.7px;font-weight:700;letter-spacing:-.4px;display:flex;align-items:center;gap:10px}
+.sub{color:var(--muted);font-size:14.9px;margin-top:3px}
+.ctrls{margin-left:auto;display:flex;gap:10px;align-items:center}
+.toggle{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 6px;cursor:pointer;box-shadow:var(--shadow);font-size:14.9px;color:var(--muted);user-select:none}
+.toggle .sw{width:34px;height:18px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);position:relative;transition:.2s}
+.toggle .sw::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--accent2);transition:.2s}
+[data-theme="dark"] .toggle .sw::after{left:17px;background:var(--accent)}
+
+h2{font-size:14.9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);margin:24px 0 13px;font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+
+/* stat strip */
+.strip{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.strip .s{flex:1;padding:14px 18px;display:flex;align-items:center;gap:12px;border-right:1px solid var(--line)}
+.strip .s:last-child{border-right:none}
+.strip .ico{font-size:22px;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);flex:none}
+.strip .v{font-size:22px;font-weight:800;line-height:1}
+.strip .l{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+@media(max-width:820px){.strip{flex-wrap:wrap}.strip .s{flex:1 1 50%;border-bottom:1px solid var(--line)}}
+
+/* robot cards */
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:740px){.cards2{grid-template-columns:1fr}}
+.rcard{border-top:4px solid var(--rc)}
+.rhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.rdot{width:12px;height:12px;border-radius:50%;background:var(--rc);flex:none}
+.rname{font-size:18px;font-weight:800}
+.ralias{color:var(--muted);font-size:12.5px}
+.rpill{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+.gauges{display:flex;gap:10px;margin-bottom:14px}
+.gauge{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
+.gauge .gl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.gauge .gv{font-size:21px;font-weight:800;margin:3px 0 6px}
+.bar{height:7px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:5px}
+.tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:center}
+.tile b{display:block;font-size:17px;font-weight:800}
+.tile span{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px}
+
+/* metric selector + chart */
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;box-shadow:var(--shadow);flex-wrap:wrap}
+.seg button{border:none;background:transparent;color:var(--muted);font-size:13.5px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--accent2);color:#fff}
+[data-theme="dark"] .seg button.on{background:var(--accent);color:#06210f}
+.chartbox{position:relative;height:320px;margin-top:14px}
+.legendrow{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:12px}
+.legendrow i{width:22px;height:3px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:middle}
+.legendrow .ring{width:11px;height:11px;border-radius:50%;border:2px solid var(--teal);background:transparent}
+.metnote{color:var(--muted);font-size:12.5px;margin-top:8px}
+
+/* events */
+.feed{display:flex;flex-direction:column;gap:8px;max-height:460px;overflow-y:auto;padding-right:4px}
+.ev{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 14px;box-shadow:var(--shadow)}
+.ev .eic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:17px;flex:none;background:var(--panel2)}
+.ev .em{flex:1;min-width:0}
+.ev .em b{font-weight:700}
+.ev .et{color:var(--muted);font-size:12px;white-space:nowrap;flex:none}
+.ev .rtag{font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;color:#fff;margin-left:6px}
+.foot{color:var(--muted);font-size:13px;text-align:center;margin-top:40px}
+.foot b{color:var(--txt)}
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+
+<nav class="gnav">
+  <span class="brand">&#129446; Litter-Robot</span>
+  <a href="litter_robot_dashboard.html">Litter Robots</a>
+  <a href="cat_health_dashboard.html">Cat Health</a>
+  <a href="batch_run_dashboard.html">Batch Runs</a>
+  <a href="litter_robot_history.html" class="active">History</a>
+</nav>
+
+<div class="topbar">
+  <div>
+    <h1>&#128338; Litter-Robot History</h1>
+    <div class="sub" id="sub">How each robot's attributes change over time</div>
+  </div>
+  <div class="ctrls">
+    <div class="toggle" id="themeToggle"><span id="tlabel">Light</span><span class="sw"></span></div>
+  </div>
+</div>
+
+<div class="strip" id="strip"></div>
+
+<h2>Robots now</h2>
+<div class="cards2" id="robots"></div>
+
+<h2>Attribute over time</h2>
+<div class="card">
+  <div class="seg" id="metricSeg">
+    <button data-m="drawer" class="on">Waste Drawer %</button>
+    <button data-m="litter">Litter Level %</button>
+    <button data-m="cycles">Clean Cycles</button>
+    <button data-m="weight">Pet Weight</button>
+  </div>
+  <div class="chartbox"><canvas id="histChart"></canvas></div>
+  <div class="legendrow">
+    <span><i style="background:var(--lr1)"></i>LR4-1</span>
+    <span><i style="background:var(--lr2)"></i>LR4-2</span>
+    <span id="emptyLegend"><span class="ring"></span> waste drawer emptied</span>
+  </div>
+  <div class="metnote" id="metnote"></div>
+</div>
+
+<h2>What changed</h2>
+<div class="feed" id="feed"></div>
+
+<div class="foot" id="foot"></div>
+</div>
+
+<script>
+if(window.Chart){Chart.defaults.font.size=13;Chart.defaults.font.family='Tahoma,Verdana,sans-serif';}
+
+const ROWS=[{"t":"2026-06-23 15:54:49","robot":"LR4-1","status":"Ready","litter":90,"drawer":48,"full":false,"cyc":2332,"cap":17,"scoops":2332,"wt":11.42},{"t":"2026-06-23 15:54:49","robot":"LR4-2","status":"Cat Sensor Timing","litter":90,"drawer":73,"full":false,"cyc":1985,"cap":22,"scoops":1985,"wt":16.13},{"t":"2026-06-23 18:15:24","robot":"LR4-2","status":"Ready","litter":90,"drawer":25,"full":false,"cyc":1986,"cap":23,"scoops":1986,"wt":23.04},{"t":"2026-06-23 20:00:05","robot":"LR4-1","status":"Ready","litter":90,"drawer":56,"full":false,"cyc":2333,"cap":18,"scoops":2333,"wt":11.47},{"t":"2026-06-23 20:00:05","robot":"LR4-2","status":"Ready","litter":90,"drawer":21,"full":false,"cyc":1987,"cap":24,"scoops":1987,"wt":19.69},{"t":"2026-06-23 21:00:01","robot":"LR4-1","status":"Cat Sensor Timing","litter":90,"drawer":56,"full":false,"cyc":2333,"cap":18,"scoops":2333,"wt":16.29},{"t":"2026-06-23 21:00:01","robot":"LR4-2","status":"Ready","litter":90,"drawer":30,"full":false,"cyc":1988,"cap":25,"scoops":1988,"wt":18.91},{"t":"2026-06-23 22:00:01","robot":"LR4-1","status":"Ready","litter":90,"drawer":57,"full":false,"cyc":2334,"cap":19,"scoops":2334,"wt":16.29},{"t":"2026-06-24 08:00:00","robot":"LR4-1","status":"Ready","litter":90,"drawer":58,"full":false,"cyc":2335,"cap":20,"scoops":2335,"wt":11.39},{"t":"2026-06-24 08:00:00","robot":"LR4-2","status":"Ready","litter":90,"drawer":38,"full":false,"cyc":1989,"cap":26,"scoops":1989,"wt":15.89},{"t":"2026-06-24 13:23:21","robot":"LR4-2","status":"Ready","litter":90,"drawer":28,"full":false,"cyc":1990,"cap":27,"scoops":1990,"wt":10.81},{"t":"2026-06-24 19:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":66,"full":false,"cyc":2336,"cap":20,"scoops":2336,"wt":16.24},{"t":"2026-06-24 19:40:46","robot":"LR4-2","status":"Ready","litter":90,"drawer":35,"full":false,"cyc":1991,"cap":27,"scoops":1991,"wt":18.96},{"t":"2026-06-24 21:40:46","robot":"LR4-2","status":"Ready","litter":90,"drawer":32,"full":false,"cyc":1992,"cap":27,"scoops":1992,"wt":18.73},{"t":"2026-06-25 00:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":60,"full":false,"cyc":2337,"cap":20,"scoops":2337,"wt":11.59},{"t":"2026-06-25 02:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":62,"full":false,"cyc":2338,"cap":20,"scoops":2338,"wt":11.37},{"t":"2026-06-25 02:40:46","robot":"LR4-2","status":"Clean Cycle In Progress","litter":90,"drawer":39,"full":false,"cyc":1993,"cap":27,"scoops":1993,"wt":11.02},{"t":"2026-06-25 03:40:46","robot":"LR4-2","status":"Ready","litter":90,"drawer":39,"full":false,"cyc":1993,"cap":27,"scoops":1993,"wt":11.02},{"t":"2026-06-25 08:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":58,"full":false,"cyc":2339,"cap":20,"scoops":2339,"wt":11.41},{"t":"2026-06-25 08:40:46","robot":"LR4-2","status":"Ready","litter":88,"drawer":45,"full":false,"cyc":1994,"cap":27,"scoops":1994,"wt":16.06},{"t":"2026-06-25 14:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":61,"full":false,"cyc":2340,"cap":20,"scoops":2340,"wt":16.38},{"t":"2026-06-25 19:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":60,"full":false,"cyc":2341,"cap":20,"scoops":2341,"wt":11.44},{"t":"2026-06-25 19:40:46","robot":"LR4-2","status":"Ready","litter":82,"drawer":56,"full":false,"cyc":1995,"cap":27,"scoops":1995,"wt":19.16},{"t":"2026-06-25 21:40:46","robot":"LR4-1","status":"Cat Sensor Timing","litter":90,"drawer":60,"full":false,"cyc":2341,"cap":20,"scoops":2341,"wt":11.48},{"t":"2026-06-25 22:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":59,"full":false,"cyc":2342,"cap":20,"scoops":2342,"wt":11.48},{"t":"2026-06-26 00:40:46","robot":"LR4-2","status":"Ready","litter":84,"drawer":51,"full":false,"cyc":1996,"cap":27,"scoops":1996,"wt":18.84},{"t":"2026-06-26 03:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":71,"full":false,"cyc":2343,"cap":20,"scoops":2343,"wt":16.15},{"t":"2026-06-26 08:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":73,"full":false,"cyc":2344,"cap":20,"scoops":2344,"wt":11.56},{"t":"2026-06-26 11:40:46","robot":"LR4-1","status":"Ready","litter":90,"drawer":21,"full":false,"cyc":2345,"cap":20,"scoops":2345,"wt":11.56},{"t":"2026-06-26 11:40:46","robot":"LR4-2","status":"Ready","litter":90,"drawer":49,"full":false,"cyc":1997,"cap":27,"scoops":1997,"wt":18.84}];
+
+const ROBOTS=["LR4-1","LR4-2"];
+const ALIAS={"LR4-1":'aka "Vegas Robot 1"',"LR4-2":'aka "Vegas Litter Robot 2"'};
+const RC={"LR4-1":'var(--lr1)',"LR4-2":'var(--lr2)'};
+const EMPTY_DROP=15;            // a drop of >=15 points = waste drawer emptied
+
+function parseT(s){return new Date(s.replace(' ','T'));}
+function ms(s){return parseT(s).getTime();}
+function fmtT(d){const x=(d instanceof Date)?d:new Date(d);return (x.getMonth()+1)+'/'+x.getDate()+' '+x.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+function fmtDay(d){const x=new Date(d);return (x.getMonth()+1)+'/'+x.getDate();}
+function byRobot(rb){return ROWS.filter(r=>r.robot===rb).slice().sort((a,b)=>ms(a.t)-ms(b.t));}
+
+const SERIES={};   // per-robot, time-sorted
+ROBOTS.forEach(rb=>SERIES[rb]=byRobot(rb));
+
+// ----- derived stats -----
+const allT=ROWS.map(r=>ms(r.t));
+const minT=Math.min(...allT), maxT=Math.max(...allT);
+const spanH=(maxT-minT)/36e5;
+const spanLabel=spanH>=48?(spanH/24).toFixed(1)+' days':Math.round(spanH)+' h';
+
+function emptiesFor(rb){let n=0;const s=SERIES[rb];for(let i=1;i<s.length;i++)if(s[i].drawer-s[i-1].drawer<=-EMPTY_DROP)n++;return n;}
+const totalCycles=ROBOTS.reduce((a,rb)=>{const s=SERIES[rb];return a+(s[s.length-1].cyc-s[0].cyc);},0);
+const totalEmpties=ROBOTS.reduce((a,rb)=>a+emptiesFor(rb),0);
+
+const cvar=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
+
+// ----- metric configs -----
+const METRICS={
+  drawer:{label:'Waste drawer fill', unit:'%', get:r=>r.drawer, ymin:0, ymax:100, marks:true,
+          note:'Climbs as the robot sifts waste after each cycle, then drops sharply when the drawer is emptied (ringed points).'},
+  litter:{label:'Litter level', unit:'%', get:r=>r.litter, suggMin:78, suggMax:94,
+          note:'Stays near full; small dips show litter being used up before a top-up brings it back to ~90%.'},
+  cycles:{label:'Clean cycles (cumulative this window)', unit:'', cumulative:true, ymin:0,
+          note:'Running count of clean cycles since the start of this window — a steady climb means steady use.'},
+  weight:{label:'Last pet weight recorded', unit:' lb', get:r=>r.wt, suggMin:9, suggMax:24,
+          note:'The weight measured at each snapshot bounces between cats (Mittens ~11, Mochi ~16, Socks ~19 lb).'}
+};
+let METRIC='drawer';
+let chart=null;
+
+function buildDatasets(){
+  const m=METRICS[METRIC];
+  return ROBOTS.map(rb=>{
+    const s=SERIES[rb];
+    const base=m.cumulative?s[0].cyc:0;
+    const data=s.map(r=>({x:ms(r.t), y:m.cumulative?(r.cyc-base):m.get(r)}));
+    // highlight drawer-empty points when showing the drawer metric
+    let radius=3, ring=false;
+    const pr=s.map((r,i)=>(m.marks && i>0 && s[i].drawer-s[i-1].drawer<=-EMPTY_DROP)?6:3);
+    const pbw=s.map((r,i)=>(m.marks && i>0 && s[i].drawer-s[i-1].drawer<=-EMPTY_DROP)?2.5:1.5);
+    const col=cvar(rb==='LR4-1'?'--lr1':'--lr2');
+    return {label:rb, data, borderColor:col, backgroundColor:col+'22',
+            pointBackgroundColor:s.map((r,i)=>(m.marks && i>0 && s[i].drawer-s[i-1].drawer<=-EMPTY_DROP)?cvar('--panel'):col),
+            pointBorderColor:col, pointBorderWidth:pbw, pointRadius:pr,
+            tension:.25, borderWidth:2.4, fill:false, spanGaps:true};
+  });
+}
+
+function render(){
+  // strip
+  const strip=[
+    {ico:'📸',v:ROWS.length,l:'Snapshots'},
+    {ico:'⏱️',v:spanLabel,l:'Window'},
+    {ico:'🔄',v:totalCycles,l:'Cycles run'},
+    {ico:'🗑️',v:totalEmpties,l:'Drawer empties'},
+    {ico:'🤖',v:ROBOTS.length,l:'Robots'},
+  ];
+  document.getElementById('strip').innerHTML=strip.map(t=>
+    `<div class="s"><div class="ico">${t.ico}</div><div><div class="v">${t.v}</div><div class="l">${t.l}</div></div></div>`).join('');
+
+  document.getElementById('sub').textContent=
+    `How each robot's attributes change over time · ${fmtT(minT)} – ${fmtT(maxT)} · ${ROWS.length} snapshots`;
+
+  // robot cards
+  document.getElementById('robots').innerHTML=ROBOTS.map(rb=>{
+    const s=SERIES[rb], cur=s[s.length-1];
+    const cycWin=cur.cyc-s[0].cyc;
+    const dCol=cur.drawer>=85?'var(--red)':cur.drawer>=70?'var(--amber)':'var(--lr2)';
+    const lCol=cur.litter>=50?'var(--lr2)':cur.litter>=30?'var(--amber)':'var(--red)';
+    return `<div class="card rcard" style="--rc:${RC[rb]}">
+      <div class="rhead"><span class="rdot"></span>
+        <div><div class="rname">${rb}</div><div class="ralias">${ALIAS[rb]}</div></div>
+        <span class="rpill">${cur.status}</span></div>
+      <div class="gauges">
+        <div class="gauge"><div class="gl">Litter level</div><div class="gv">${cur.litter}%</div>
+          <div class="bar"><i style="width:${cur.litter}%;background:${lCol}"></i></div></div>
+        <div class="gauge"><div class="gl">Waste drawer</div><div class="gv">${cur.drawer}%</div>
+          <div class="bar"><i style="width:${cur.drawer}%;background:${dCol}"></i></div></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>${cur.cyc.toLocaleString()}</b><span>Cycle count</span></div>
+        <div class="tile"><b>+${cycWin}</b><span>Cycles / window</span></div>
+        <div class="tile"><b>${emptiesFor(rb)}</b><span>Drawer empties</span></div>
+        <div class="tile"><b>${cur.scoops.toLocaleString()}</b><span>Scoops saved</span></div>
+        <div class="tile"><b>${cur.cap}</b><span>Cycle capacity</span></div>
+        <div class="tile"><b>${cur.wt} lb</b><span>Last weight</span></div>
+      </div></div>`;}).join('');
+
+  drawChart();
+  buildFeed();
+
+  const fw="ESP 1.1.75 / PIC 10500.3072.2.93 / TOF 5.0.2.1";
+  document.getElementById('foot').innerHTML=
+    `Both units <b>online</b> · all fault sensors <b>clear</b> · firmware <b>${fw}</b> · ` +
+    `source: <code>live_logs/litter_robot_logs_06-2026.csv</code>`;
+}
+
+function drawChart(){
+  const m=METRICS[METRIC];
+  const grid=cvar('--line'), mut=cvar('--muted');
+  document.getElementById('emptyLegend').style.display=m.marks?'':'none';
+  document.getElementById('metnote').textContent=m.note;
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('histChart'),{type:'line',
+    data:{datasets:buildDatasets()},
+    options:{responsive:true,maintainAspectRatio:false,parsing:{xAxisKey:'x',yAxisKey:'y'},
+      interaction:{mode:'nearest',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          title:items=>fmtT(items[0].parsed.x),
+          label:c=>` ${c.dataset.label}: ${c.parsed.y}${m.unit}`}}},
+      scales:{
+        x:{type:'linear',min:minT,max:maxT,grid:{color:grid},
+           ticks:{color:mut,maxRotation:0,autoSkip:true,maxTicksLimit:8,callback:v=>fmtDay(v)}},
+        y:{grid:{color:grid},ticks:{color:mut,callback:v=>v+(m.unit||'')},
+           min:m.ymin,max:m.ymax,suggestedMin:m.suggMin,suggestedMax:m.suggMax,
+           title:{display:true,text:m.label,color:mut}}}}});
+}
+
+function buildFeed(){
+  const evs=[];
+  ROBOTS.forEach(rb=>{
+    const s=SERIES[rb];
+    for(let i=1;i<s.length;i++){
+      const p=s[i-1], c=s[i], t=ms(c.t);
+      if(c.drawer-p.drawer<=-EMPTY_DROP)
+        evs.push({t,rb,ic:'🗑️',col:'var(--teal)',
+          html:`<b>${rb}</b> waste drawer emptied <b>${p.drawer}% → ${c.drawer}%</b>`});
+      else if(c.litter<p.litter)
+        evs.push({t,rb,ic:'📉',col:'var(--amber)',
+          html:`<b>${rb}</b> litter level dipped <b>${p.litter}% → ${c.litter}%</b>`});
+      else if(c.litter>p.litter && p.litter<90)
+        evs.push({t,rb,ic:'⬆️',col:'var(--lr2)',
+          html:`<b>${rb}</b> litter topped up <b>${p.litter}% → ${c.litter}%</b>`});
+      if(c.status!=='Ready' && c.status!==p.status)
+        evs.push({t,rb,ic:'🟡',col:'var(--muted)',
+          html:`<b>${rb}</b> status: <b>${c.status}</b>`});
+    }
+  });
+  evs.sort((a,b)=>b.t-a.t);
+  document.getElementById('feed').innerHTML=evs.map(e=>
+    `<div class="ev"><div class="eic" style="color:${e.col}">${e.ic}</div>
+      <div class="em">${e.html}<span class="rtag" style="background:${RC[e.rb]}">${e.rb}</span></div>
+      <div class="et">${fmtT(e.t)}</div></div>`).join('')
+    || `<div class="ev"><div class="em">No notable attribute changes in this window.</div></div>`;
+}
+
+// controls
+document.querySelectorAll('#metricSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#metricSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); METRIC=b.dataset.m; drawChart();
+}));
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const dark=document.body.getAttribute('data-theme')==='dark';
+  document.body.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('tlabel').textContent=dark?'Light':'Dark';
+  render();
+});
+
+render();
+</script>
+</body></html>

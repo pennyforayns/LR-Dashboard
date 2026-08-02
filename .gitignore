@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Secrets / credentials — never commit these
+.env
+*.env
+secrets.*
+credentials.*
+*WHISKER_PASSWORD*
+
+# AWS deploy policy — contains your account ID (keep local, don't publish)
+code/aws_dashboard_policy.json
+
+# Scratch / old material — contains account IDs, pet UUIDs, presigned URLs, serials
+_to_delete/
+*litter_robot_code_output*.txt
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# Claude Code local session artifacts (decision logs, etc.)
+.claude/
+
+# Transient diagnostic / report output
+schedule_diag.txt
+report.txt
+
+# Raw robot/cat data — keep private, only the built dashboard is public
+live_logs/
+historical_exports/

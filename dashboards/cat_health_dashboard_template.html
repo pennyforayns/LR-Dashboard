@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Cat Health Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fa; --bg2:#eef1f6; --panel:#ffffff; --panel2:#f1f4f9; --line:#e2e7ef;
+  --txt:#1b2330; --muted:#697283; --shadow:0 1px 3px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.05);
+  --accent:#10b981; --accent2:#3b82f6;
+  --mochi:#f59e0b; --socks:#ef4444; --mittens:#8b5cf6;
+}
+[data-theme="dark"]{
+  --bg:#0e1014; --bg2:#15181f; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+  --txt:#e8ebf0; --muted:#9aa3b2; --shadow:none;
+  --accent:#6ee7b7; --accent2:#60a5fa; --mittens:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Tahoma,Verdana,Geneva,sans-serif;line-height:1.45;padding:26px 20px 56px;transition:background .25s,color .25s}
+.wrap{max-width:1040px;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+h1{font-size:28.7px;font-weight:700;letter-spacing:-.4px;display:flex;align-items:center;gap:10px}
+.sub{color:var(--muted);font-size:14.9px;margin-top:3px}
+.toggle{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 6px;cursor:pointer;box-shadow:var(--shadow);font-size:14.9px;color:var(--muted);user-select:none}
+.toggle .sw{width:34px;height:18px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);position:relative;transition:.2s}
+.toggle .sw::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--accent2);transition:.2s}
+[data-theme="dark"] .toggle .sw::after{left:17px;background:var(--accent)}
+.ctrls{margin-left:auto;display:flex;gap:10px;align-items:center}
+.toggle{margin-left:0}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;box-shadow:var(--shadow)}
+.seg button{border:none;background:transparent;color:var(--muted);font-size:14.4px;font-weight:600;padding:5px 13px;border-radius:999px;cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--accent2);color:#fff}
+[data-theme="dark"] .seg button.on{background:var(--accent);color:#06210f}
+h2{font-size:14.9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);margin:21px 0 13px;font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.strip{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:6px}
+.strip .s{flex:1;padding:14px 18px;border-right:1px solid var(--line)}
+.strip .s:last-child{border-right:none}
+.strip .v{font-size:24.1px;font-weight:700;line-height:1} .strip .l{color:var(--muted);font-size:13.2px;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+@media(max-width:760px){.strip{flex-wrap:wrap}.strip .s{flex:1 1 50%}}
+.catcard{display:flex;gap:22px;margin-bottom:18px;align-items:stretch}
+@media(max-width:680px){.catcard{flex-direction:column}}
+.left{flex:none;width:210px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;border-right:1px solid var(--line);padding-right:20px}
+@media(max-width:680px){.left{width:auto;border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:16px}}
+.avatar{width:74px;height:74px;border-radius:50%;overflow:hidden} .avatar svg{width:100%;height:100%;display:block}
+.cname{font-size:21px;font-weight:800;text-transform:capitalize}
+.cmeta{color:var(--muted);font-size:13px}
+.rating{font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;color:#fff;margin-top:2px}
+.right{flex:1;min-width:0}
+.bigw{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;flex:1;min-width:120px}
+.kpi .v{font-size:19px;font-weight:800} .kpi .v small{font-size:12px;color:var(--muted);font-weight:600}
+.kpi .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+.comp{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.comp .cl{width:120px;flex:none;color:var(--muted)}
+.cbar{flex:1;height:12px;border-radius:6px;background:var(--panel2);overflow:hidden}
+.cbar>i{display:block;height:100%;border-radius:6px}
+.comp .cv{width:34px;flex:none;text-align:right;font-weight:800}
+.note{font-size:13px;color:var(--muted);margin-top:12px;padding:10px 13px;background:var(--panel2);border-radius:10px}
+.chartwrap{height:90px;margin-top:12px}
+.method{font-size:12.5px;color:var(--muted);line-height:1.6}
+.method b{color:var(--txt)}
+.disclaimer{font-size:12px;color:var(--muted);margin-top:14px;font-style:italic}
+
+/* ===== global nav ===== */
+.gnav{display:flex;gap:6px;align-items:center;margin-bottom:18px;flex-wrap:wrap;font-size:13px}
+.gnav .brand{font-weight:800;letter-spacing:-.2px;margin-right:8px;display:flex;align-items:center;gap:6px}
+.gnav a{text-decoration:none;color:var(--muted);padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);transition:.15s;white-space:nowrap}
+.gnav a:hover{color:var(--txt);border-color:var(--muted)}
+.gnav a.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+[data-theme="dark"] .gnav a.active{background:var(--accent);color:#06210f;border-color:var(--accent)}
+</style></head>
+<body data-theme="light"><div class="wrap">
+<nav class="gnav">
+  <span class="brand">&#129446; Litter-Robot</span>
+  <a href="litter_robot_dashboard.html">Litter Robots</a>
+  <a href="cat_health_dashboard.html" class="active">Cat Health</a>
+  <a href="batch_run_dashboard.html">Batch Runs</a>
+</nav>
+<div class="topbar"><div>
+  <h1>🐾 Cat Health Dashboard</h1>
+  <div class="sub" id="sub">Weight, litter-box activity &amp; a wellness score for each cat</div>
+</div><div class="ctrls"><div class="seg" id="rangeSeg"><button data-r="14" class="on">14 days</button><button data-r="30">30 days</button><button data-r="all">Max</button></div><div class="toggle" id="tg"><span id="tl">Light</span><span class="sw"></span></div></div></div>
+
+<div class="strip" id="strip"></div>
+<h2>Per-Cat Health</h2>
+<div id="cards"></div>
+
+<h2>How the score works</h2>
+<div class="card method" id="method"></div>
+<div class="disclaimer">This is a wellness indicator derived from litter-box data, not veterinary advice. Sudden changes in weight or litter-box habits — especially straining, much more or much less frequent visits, or noticeable weight loss — warrant a vet visit.</div>
+</div>
+<script>
+const VIS=__VIS_JSON__; const CATS=__CATS_JSON__;
+const _PAL=['#f59e0b','#8b5cf6','#ef4444','#3b82f6','#10b981','#ec4899','#14b8a6','#f97316'];
+const CAT_COLOR=Object.fromEntries(CATS.map((c,i)=>[c.name,_PAL[i%_PAL.length]]));
+function catSVG(n){
+ if(n==='Socks') return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+   <path d="M17 42 L19 11 L45 31 Z" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M83 42 L81 11 L55 31 Z" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M24 35 L25 19 L39 31 Z" fill="#f3aab4"/><path d="M76 35 L75 19 L61 31 Z" fill="#f3aab4"/>
+   <ellipse cx="50" cy="59" rx="41" ry="35" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M50 50 Q76 55 71 76 Q61 92 50 92 Q39 92 29 76 Q24 55 50 50 Z" fill="#fdfdfd"/>
+   <path d="M50 35 Q58 46 53 57 Q50 61 47 57 Q42 46 50 35 Z" fill="#fdfdfd"/>
+   <ellipse cx="35" cy="53" rx="7" ry="8" fill="#f3c13a"/><ellipse cx="65" cy="53" rx="7" ry="8" fill="#f3c13a"/>
+   <ellipse cx="35" cy="53" rx="2.6" ry="6" fill="#15181d"/><ellipse cx="65" cy="53" rx="2.6" ry="6" fill="#15181d"/>
+   <path d="M45 63 H55 L50 69 Z" fill="#ef8fa0"/>
+   <path d="M50 69 V74 M50 74 Q43 78 39 74 M50 74 Q57 78 61 74" stroke="#9aa0a8" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+   <g stroke="#cfd3da" stroke-width="1.2" stroke-linecap="round"><path d="M29 65 L8 61 M29 70 L9 72 M71 65 L92 61 M71 70 L91 72"/></g></svg>`;
+ if(n==='Mittens') return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+   <path d="M25 40 L24 8 L47 30 Z" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M75 40 L76 8 L53 30 Z" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M30 34 L30 16 L42 30 Z" fill="#f3aab4"/><path d="M70 34 L70 16 L58 30 Z" fill="#f3aab4"/>
+   <ellipse cx="50" cy="59" rx="29" ry="36" fill="#23272e" stroke="#6b7280" stroke-width="1.4"/>
+   <path d="M50 53 Q65 57 62 75 Q56 89 50 89 Q44 89 38 75 Q35 57 50 53 Z" fill="#fdfdfd"/>
+   <path d="M50 35 Q56 46 52 57 Q50 61 48 57 Q44 46 50 35 Z" fill="#fdfdfd"/>
+   <ellipse cx="40" cy="53" rx="5.8" ry="7.3" fill="#f3c13a"/><ellipse cx="60" cy="53" rx="5.8" ry="7.3" fill="#f3c13a"/>
+   <ellipse cx="40" cy="53" rx="2.1" ry="5.4" fill="#15181d"/><ellipse cx="60" cy="53" rx="2.1" ry="5.4" fill="#15181d"/>
+   <path d="M47 62 H53 L50 67 Z" fill="#ef8fa0"/>
+   <path d="M50 67 V72 M50 72 Q45 75 42 72 M50 72 Q55 75 58 72" stroke="#9aa0a8" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+   <g stroke="#cfd3da" stroke-width="1.1" stroke-linecap="round"><path d="M37 63 L19 59 M37 67 L19 69 M63 63 L81 59 M63 67 L81 69"/></g></svg>`;
+ return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+   <path d="M20 41 L22 11 L45 30 Z" fill="#ececed" stroke="#c2c6cc" stroke-width="1.2"/>
+   <path d="M26 34 L27 19 L39 30 Z" fill="#f3aab4"/>
+   <path d="M80 41 L78 11 L55 30 Z" fill="#8f96a0" stroke="#6b7280" stroke-width="1.2"/>
+   <path d="M74 34 L73 19 L61 30 Z" fill="#f3aab4"/>
+   <ellipse cx="50" cy="57" rx="37" ry="35" fill="#ececed"/>
+   <path d="M50 22 A37 35 0 0 1 50 92 Z" fill="#8f96a0"/>
+   <g stroke="#565d66" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M57 27 L59 37"/><path d="M65 29 L66 40"/><path d="M73 34 L72 44"/><path d="M60 48 L74 50"/></g>
+   <ellipse cx="50" cy="57" rx="37" ry="35" fill="none" stroke="#c2c6cc" stroke-width="1.2"/>
+   <ellipse cx="37" cy="52" rx="6.5" ry="7.6" fill="#7cc46f"/><ellipse cx="63" cy="52" rx="6.5" ry="7.6" fill="#7cc46f"/>
+   <ellipse cx="37" cy="52" rx="2.4" ry="5.6" fill="#15181d"/><ellipse cx="63" cy="52" rx="2.4" ry="5.6" fill="#15181d"/>
+   <path d="M46 60 H54 L50 66 Z" fill="#ef8fa0"/>
+   <path d="M50 66 V71 M50 71 Q45 75 41 71 M50 71 Q55 75 59 71" stroke="#7c828e" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+   <g stroke-linecap="round" stroke-width="1.2"><path d="M34 62 L14 58 M34 66 L15 68" stroke="#cfd3da"/><path d="M66 62 L86 58 M66 66 L85 68" stroke="#aeb4bc"/></g></svg>`;
+}
+const NOW=new Date('__NOW_ISO__');
+let RANGE='14';
+const RDAYS={'14':14,'30':30};
+function winDays(){ if(RANGE!=='all') return RDAYS[RANGE];
+  const earliest=VIS.reduce((a,v)=>v.dt<a?v.dt:a, VIS[0].dt);
+  return Math.max(1,Math.ceil((NOW-new Date(earliest))/864e5)); }
+function curCut(){ const c=new Date(NOW); c.setDate(c.getDate()-winDays()); return c; }
+const rangeShort=()=> RANGE==='14'?'14d':RANGE==='30'?'30d':'all';
+const overPhrase=()=> RANGE==='all'?'all logged data':RANGE+' days';
+const windowLabel=()=> RANGE==='all'?'all-time':RANGE+'-day window';
+const changeLbl=()=> RANGE==='all'?'All-time change':RANGE+'-day change';
+const methodWin=()=> RANGE==='all'?'full history':'last '+RANGE+' days';
+const dkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function ageStr(b){const d=new Date(b);let y=NOW.getFullYear()-d.getFullYear();if(NOW.getMonth()<d.getMonth()||(NOW.getMonth()===d.getMonth()&&NOW.getDate()<d.getDate()))y--;return y+' yr';}
+
+function analyze(c){
+  const WIN=winDays(); const cut=curCut();
+  const all=VIS.filter(v=>v.cat===c.name).slice().sort((a,b)=>a.dt<b.dt?-1:1);
+  const v30=all.filter(v=>new Date(v.dt)>=cut);
+  const n30=v30.length, perDay=n30/WIN;
+  // daily counts over the window
+  const days={}; for(let i=0;i<WIN;i++){const d=new Date(NOW);d.setDate(d.getDate()-i);days[dkey(d)]=0;}
+  v30.forEach(v=>{const k=v.dt.slice(0,10); if(k in days) days[k]++;});
+  const arr=Object.values(days);
+  const m=mean(arr), sd=Math.sqrt(mean(arr.map(x=>(x-m)**2))), cv=m?sd/m:1.5;
+  // weight trend within window: mean of first third vs last third
+  const ws=v30.map(v=>v.weight);
+  const k=Math.max(1,Math.round(ws.length/3));
+  const early=mean(ws.slice(0,k)), late=mean(ws.slice(-k));
+  const pct = early? (late-early)/early*100 : 0;
+  const deltaLb = late-early;
+  const hrs = c.lastISO ? Math.round((NOW-new Date(c.lastISO))/36e5) : null;
+  // ---- component scores (0-100) ----
+  // frequency: ideal 2.0-3.5 logged visits/day
+  let freq; if(perDay>=2&&perDay<=3.5) freq=100;
+    else if(perDay<2) freq=Math.max(0,Math.round((perDay-0.4)/1.6*100));
+    else freq=Math.max(0,Math.round((1-(perDay-3.5)/3)*100));
+  freq=Math.min(100,freq);
+  // weight stability: penalize % change over the window
+  const wstab=Math.max(0,Math.round(100-Math.abs(pct)*6));
+  // consistency: lower CV of daily visits is better
+  const cons=Math.max(0,Math.round((1-cv/1.4)*100));
+  const score=Math.round(0.45*freq+0.35*wstab+0.20*cons);
+  const band = score>=85?['Excellent','#2e9e62']:score>=70?['Good','var(--accent2)']:score>=55?['Fair','#d99a2f']:['Watch','#d4513f'];
+  // weight sparkline series (window)
+  // smoothed weight: daily mean, then centered 5-point moving average
+  const byDay={}; v30.forEach(v=>{const k=v.dt.slice(0,10);(byDay[k]=byDay[k]||[]).push(v.weight);});
+  const dk=Object.keys(byDay).sort(); const dm=dk.map(k=>mean(byDay[k]));
+  const sm=dm.map((_,i)=>{let s=0,n=0;for(let j=Math.max(0,i-2);j<=Math.min(dm.length-1,i+2);j++){s+=dm[j];n++;}return s/n;});
+  const series=dk.map((k,i)=>({x:k.slice(5),y:+sm[i].toFixed(2)}));
+  return {n30,perDay,cv,pct,deltaLb,hrs,freq,wstab,cons,score,band,series};
+}
+
+function ring(score,color){
+  const r=34,c=2*Math.PI*r,off=c*(1-score/100);
+  return `<svg viewBox="0 0 80 80" width="92" height="92">
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 40 40)"/>
+    <text x="40" y="39" text-anchor="middle" dominant-baseline="central" font-family="Tahoma,sans-serif" font-weight="800" font-size="23" fill="var(--txt)">${score}</text>
+    <text x="40" y="56" text-anchor="middle" font-family="Tahoma,sans-serif" font-weight="700" font-size="8" fill="var(--muted)">/ 100</text>
+  </svg>`;
+}
+let charts=[];
+function render(){
+  charts.forEach(c=>c.destroy());charts=[];
+  const A=CATS.map(c=>({c,a:analyze(c)}));
+  const hh=Math.round(mean(A.map(x=>x.a.score)));
+  const tot30=A.reduce((s,x)=>s+x.a.n30,0);
+  document.getElementById('sub').innerHTML='Weight, litter-box activity &amp; a wellness score for each cat · '+windowLabel()+' · generated '+NOW.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  const strip=[
+    {v:hh,l:'Household score'},
+    {v:tot30.toLocaleString(),l:'Visits · '+rangeShort()},
+    {v:(tot30/winDays()).toFixed(1),l:'Visits / day'},
+    {v:CATS.length,l:'Cats tracked'},
+  ];
+  document.getElementById('strip').innerHTML=strip.map(t=>`<div class="s"><div class="v">${t.v}</div><div class="l">${t.l}</div></div>`).join('');
+
+  document.getElementById('cards').innerHTML=A.map(({c,a},i)=>{
+    const col=CAT_COLOR[c.name];
+    const trend = a.deltaLb>=0.05?`▲ +${a.deltaLb.toFixed(2)}`:a.deltaLb<=-0.05?`▼ ${a.deltaLb.toFixed(2)}`:`▬ ${a.deltaLb.toFixed(2)}`;
+    const trendCol = Math.abs(a.pct)<3?'#2e9e62':Math.abs(a.pct)<6?'#d99a2f':'#d4513f';
+    const note = `${c.name} logs about <b style="color:${col}">${a.perDay.toFixed(1)} visits/day</b> with `
+      + (a.cv<0.6?'very steady':a.cv<0.9?'fairly steady':'somewhat uneven')+` daily rhythm, and weight is `
+      + (Math.abs(a.pct)<3?'<b>stable</b>':(a.pct<0?'<b>trending down</b>':'<b>trending up</b>'))+` (${a.pct>=0?'+':''}${a.pct.toFixed(1)}% over ${overPhrase()}).`;
+    return `<div class="card catcard">
+      <div class="left">
+        <div class="avatar" style="background:${col}22">${catSVG(c.name)}</div>
+        <div class="cname">${c.name}</div>
+        <div class="cmeta">${ageStr(c.birth)} · ${c.sex==='male'?'♂ male':'♀ female'}</div>
+        ${ring(a.score,a.band[1])}
+        <div class="rating" style="background:${a.band[1]}">${a.band[0]}</div>
+      </div>
+      <div class="right">
+        <div class="bigw">
+          <div class="kpi"><div class="v">${c.cur} <small>lbs</small></div><div class="l">Current weight</div></div>
+          <div class="kpi"><div class="v" style="color:${trendCol}">${trend} <small>lb</small></div><div class="l">${changeLbl()}</div></div>
+          <div class="kpi"><div class="v">${a.perDay.toFixed(1)}<small>/day</small></div><div class="l">Litter visits</div></div>
+          <div class="kpi"><div class="v">${a.hrs==null?'—':a.hrs+'h'}</div><div class="l">Since last visit</div></div>
+        </div>
+        <div class="comp"><span class="cl">Litter frequency</span><div class="cbar"><i style="width:${a.freq}%;background:${col}"></i></div><span class="cv">${a.freq}</span></div>
+        <div class="comp"><span class="cl">Weight stability</span><div class="cbar"><i style="width:${a.wstab}%;background:${col}"></i></div><span class="cv">${a.wstab}</span></div>
+        <div class="comp"><span class="cl">Daily consistency</span><div class="cbar"><i style="width:${a.cons}%;background:${col}"></i></div><span class="cv">${a.cons}</span></div>
+        <div class="chartwrap"><canvas id="wt${i}"></canvas></div>
+        <div class="note">${note}</div>
+      </div>
+    </div>`;}).join('');
+
+  const g=getComputedStyle(document.body).getPropertyValue('--line');
+  const m=getComputedStyle(document.body).getPropertyValue('--muted');
+  A.forEach(({c,a},i)=>{
+    const data=a.series.length?a.series:[{x:'',y:c.cur}];
+    charts.push(new Chart(document.getElementById('wt'+i),{type:'line',
+      data:{datasets:[{data,borderColor:CAT_COLOR[c.name],backgroundColor:CAT_COLOR[c.name]+'22',fill:true,tension:.35,pointRadius:0,borderWidth:2}]},
+      options:{parsing:{xAxisKey:'x',yAxisKey:'y'},plugins:{legend:{display:false},tooltip:{enabled:true}},responsive:true,maintainAspectRatio:false,
+        scales:{x:{type:'category',grid:{display:false},ticks:{color:m,font:{size:9},maxTicksLimit:4,maxRotation:0}},
+          y:{grid:{color:g},ticks:{color:m,font:{size:9},maxTicksLimit:4},title:{display:true,text:'lbs',color:m,font:{size:9}}}}}}));
+  });
+
+  document.getElementById('method').innerHTML =
+    `The wellness score (0–100) blends three signals from the ${methodWin()} of litter-box data:<br><br>`
+    + `<b>① Litter frequency (45%)</b> — how often the cat is logged using a box. Healthy cats log roughly <b>2–3.5 visits/day</b>; well below or above that lowers the score (too few can mean constipation/urinary issues, too many can flag urinary or metabolic problems).<br>`
+    + `<b>② Weight stability (35%)</b> — percent change in weight across the window. Stable weight scores high; larger swings (gain or loss) reduce it.<br>`
+    + `<b>③ Daily consistency (20%)</b> — how even the day-to-day visit count is. A steady rhythm scores higher than erratic bursts and gaps.<br><br>`
+    + `Bands: <b style="color:#2e9e62">Excellent 85+</b> · <b style="color:var(--accent2)">Good 70–84</b> · <b style="color:#d99a2f">Fair 55–69</b> · <b style="color:#d4513f">Watch &lt;55</b>.`;
+}
+document.getElementById('tg').onclick=()=>{const dk=document.body.getAttribute('data-theme')==='dark';document.body.setAttribute('data-theme',dk?'light':'dark');document.getElementById('tl').textContent=dk?'Light':'Dark';render();};
+document.querySelectorAll('#rangeSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');RANGE=b.dataset.r;render();}));
+render();
+</script></body></html>
