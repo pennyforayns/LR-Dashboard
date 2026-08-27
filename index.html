@@ -377,7 +377,7 @@ const cats=[{"name": "Clove", "sex": "female", "cur": 10.9, "birth": "2020-03-12
 
 // ---- range machinery ----
 let RANGE='14';
-const NOW=new Date('2026-08-27T13:02:14');
+const NOW=new Date('2026-08-27T13:02:26');
 function ageStr(bd){const d=new Date(bd);let y=NOW.getFullYear()-d.getFullYear();if(NOW.getMonth()<d.getMonth()||(NOW.getMonth()===d.getMonth()&&NOW.getDate()<d.getDate()))y--;return y+' yr';}
 function agePretty(bd){const d=new Date(bd+'T12:00');let y=NOW.getFullYear()-d.getFullYear();let mo=NOW.getMonth()-d.getMonth();if(NOW.getDate()<d.getDate())mo--;if(mo<0){y--;mo+=12;}return mo>0?`${y}y ${mo}mo`:`${y}y`;}
 function bdayChip(bd,col){const d=new Date(bd+'T12:00');const date=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});let next=new Date(NOW.getFullYear(),d.getMonth(),d.getDate());if(next<NOW)next=new Date(NOW.getFullYear()+1,d.getMonth(),d.getDate());const days=Math.round((next-NOW)/864e5);const soon=days<=30?` 🎉${days===0?'today!':days+'d'}`:'';return `<span class="bday-chip" style="background:${col}1f;color:${col}">🎂 ${date} · <b>${agePretty(bd)}</b>${soon}</span>`;}
